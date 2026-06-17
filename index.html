@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点击打方块小游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+
+        body {
+            background-color: #1a1a2e;
+            overflow: hidden;
+        }
+
+        .info-bar {
+            width: 100%;
+            height: 60px;
+            background: #16213e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 80px;
+            color: #fff;
+            font-size: 22px;
+        }
+
+        #game-box {
+            width: 100vw;
+            height: calc(100vh - 60px);
+            position: relative;
+        }
+
+        .target {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            position: absolute;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .target:active {
+            transform: scale(0.9);
+        }
+
+        .tip {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 36px;
+            text-align: center;
+        }
+
+        button {
+            margin-top: 30px;
+            padding: 12px 40px;
+            font-size: 20px;
+            border: none;
+            border-radius: 8px;
+            background: #0f3460;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #533483;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="info-bar">
+        <div>得分：<span id="score">0</span></div>
+        <div>剩余时间：<span id="time">60</span> s</div>
+    </div>
+    <div id="game-box">
+        <div class="tip" id="start-tip">
+            点击彩色方块获得10分<br>点击空白扣5分<br>
+            <button onclick="startGame()">开始游戏</button>
+        </div>
+    </div>
+
+    <script>
+        const gameBox = document.getElementById('game-box');
+        const scoreDom = document.getElementById('score');
+        const timeDom = document.getElementById('time');
+        const startTip = document.getElementById('start-tip');
+
+        let score = 0;
+        let time = 60;
+        let gameRunning = false;
+        let timer = null;
+        let blockTimer = null;
+
+        // 随机颜色
+        function randomColor() {
+            const r = Math.floor(Math.random() * 255);
+            const g = Math.floor(Math.random() * 255);
+            const b = Math.floor(Math.random() * 255);
+            return `rgb(${r},${g},${b})`;
+        }
+
+        // 生成方块
+        function createBlock() {
+            // 清除旧方块
+            document.querySelectorAll('.target').forEach(el => el.remove());
+            const block = document.createElement('div');
+            block.className = 'target';
+            block.style.background = randomColor();
+
+            // 随机位置，防止超出边界
+            const maxX = gameBox.clientWidth - 80;
+            const maxY = gameBox.clientHeight - 80;
+            const x = Math.floor(Math.random() * maxX);
+            const y = Math.floor(Math.random() * maxY);
+            block.style.left = x + 'px';
+            block.style.top = y + 'px';
+
+            // 点击方块加分
+            block.onclick = (e) => {
+                e.stopPropagation();
+                score += 10;
+                scoreDom.innerText = score;
+                block.remove();
+            };
+            gameBox.appendChild(block);
+        }
+
+        // 点击空白扣分
+        gameBox.onclick = (e) => {
+            if (!gameRunning) return;
+            if (e.target === gameBox) {
+                score -= 5;
+                scoreDom.innerText = score;
+            }
+        }
+
+        // 开始游戏
+        function startGame() {
+            startTip.style.display = 'none';
+            gameRunning = true;
+            score = 0;
+            time = 60;
+            scoreDom.innerText = score;
+            timeDom.innerText = time;
+
+            // 倒计时
+            timer = setInterval(() => {
+                time--;
+                timeDom.innerText = time;
+                if (time <= 0) gameOver();
+            }, 1000);
+
+            // 每800ms刷新方块
+            blockTimer = setInterval(createBlock, 800);
+            createBlock();
+        }
+
+        // 游戏结束
+        function gameOver() {
+            gameRunning = false;
+            clearInterval(timer);
+            clearInterval(blockTimer);
+            document.querySelectorAll('.target').forEach(el => el.remove());
+            startTip.style.display = 'block';
+            startTip.innerHTML = `游戏结束！你的得分：${score}<br><button onclick="startGame()">再来一局</button>`;
+        }
+    </script>
+</body>
+
+</html>
